@@ -23,6 +23,7 @@ python setup.py install
     download-srtm30-data.sh
     ```
     Afterwards your working directory should look like this:
+    
     ```
     workdir/
     └── srtm30
