@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="srtm30-parser", # Replace with your own username
+    name="srtm30_parser", # Replace with your own username
     version="0.1",
     author="Marc Wiedermann",
     author_email="marcwie@pik-potsdam.de",
@@ -12,7 +12,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/marcwie/srtm30-parser",
-    #packages=setuptools.find_packages(include=("sedac_gpw_parser",)),
+    packages=setuptools.find_packages(include=("srtm30_parser",)),
     #classifiers=[
     #    "Programming Language :: Python :: 3",
     #    "License :: OSI Approved :: MIT License",
