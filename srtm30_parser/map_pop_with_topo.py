@@ -12,7 +12,7 @@ def get_population_data(country_id):
     data = pop.population_array()
     lat = pop.latitude_range()
     lon = pop.longitude_range()
-    
+
     lonmin = lon.min()
     lonmax = lon.max()
     latmax = lat.max()
@@ -24,8 +24,10 @@ def get_population_data(country_id):
 
 
 def get_infiles(lonmin, lonmax, latmin, latmax):
-    lonmask = (file_lons <= lonmin) & (file_lons >= (lonmax - 40))
-    latmask = (file_lats >= latmin) & (file_lats >= latmax)
+    print(latmin, latmax, file_lats)
+
+    lonmask = (file_lons >= (lonmin - 40)) & (file_lons <= lonmax)
+    latmask = (file_lats >= latmin) & (file_lats <= (latmax + 50))
     valid_lons = file_lons[lonmask]
     valid_lats = file_lats[latmask]
     
@@ -33,12 +35,26 @@ def get_infiles(lonmin, lonmax, latmin, latmax):
     latmin = np.round(latmin + 1/120, 8) # Add 1/120 because topographic data is with respect to UPPER LEFT corner
     lonmin = np.round(lonmin, 8)
     lonmax = np.round(lonmax, 8)
-        
-    assert len(valid_lats) == 1
-    assert len(valid_lons) == 1
-    
+
+    n_lat = int(np.round((latmax - latmin) * 120) + 1)
+    n_lon = int(np.round((lonmax - lonmin) * 120) + 1)
+
+    full_data = np.zeros((n_lat, n_lon))
+
+    lat_offset = 0
     for valid_lat in valid_lats:
+            
+        file_lat_range = np.round(np.arange(valid_lat, valid_lat-50, -1/120), 8)
+        valid_file_lat_range = (file_lat_range <= latmax) & (file_lat_range >= latmin)
+        n_row = valid_file_lat_range.sum()
+
+        lon_offset = 0
         for valid_lon in valid_lons:
+
+            file_lon_range = np.round(np.arange(valid_lon, valid_lon+40, +1/120), 8)
+            valid_file_lon_range = (file_lon_range <= lonmax) & (file_lon_range >= lonmin)
+            n_col = valid_file_lon_range.sum()
+            
             if valid_lon < 0:
                 lon_pref = "W"
             else:
@@ -48,28 +64,20 @@ def get_infiles(lonmin, lonmax, latmin, latmax):
             else:
                 lat_pref = "N" 
 
-            infile = lon_pref + str(abs(valid_lon)).zfill(3) + lat_pref + str(valid_lat).zfill(2) + ".DEM"
+            infile = lon_pref + str(abs(valid_lon)).zfill(3) + lat_pref + str(abs(valid_lat)).zfill(2) + ".DEM"
             
-            file_lat_range = np.round(np.arange(valid_lat, valid_lat-50, -1/120), 8)
-            file_lon_range = np.round(np.arange(valid_lon, valid_lon+40, +1/120), 8)
-
-            print(latmax)
-            assert ((file_lat_range == latmax).sum() == 1)
-            assert ((file_lat_range == latmin).sum() == 1)
-                        
-            assert ((file_lon_range == lonmax).sum() == 1)
-            assert ((file_lon_range == lonmin).sum() == 1)
-            
-            valid_file_lat_range = (file_lat_range <= latmax) & (file_lat_range >= latmin)
-            valid_file_lon_range = (file_lon_range <= lonmax) & (file_lon_range >= lonmin)
-
-            print(infile, valid_file_lat_range.sum(), valid_file_lon_range.sum())
-            
+           
             with open("srtm30/"+infile) as infile:
                 data = np.fromfile(infile, np.dtype('>i2')).reshape(6000, 4800)
-                
-            return data[valid_file_lat_range][:, valid_file_lon_range]
+               
+            data = data[valid_file_lat_range][:, valid_file_lon_range]
+            full_data[lat_offset:lat_offset+n_row,lon_offset:lon_offset+n_col]=data
 
+            lon_offset += n_col
+
+        lat_offset += n_row
+
+    return full_data
 
 def truncate_colormap(cmap, minval=0.25, maxval=1.0, n=100):
     new_cmap = colors.LinearSegmentedColormap.from_list(
@@ -95,13 +103,8 @@ def main(country_id):
     pop_data, extent = get_population_data(country_id=country_id)
     lonmin, lonmax, latmin, latmax = extent
     topo_data = get_infiles(lonmin, lonmax, latmin, latmax)
-
-    print((lonmax - lonmin) * 120, )
     
-    print(pop_data.shape)
-    print(topo_data.shape)
-    
-    nan_pop = pop_data <= 0
+    nan_pop = pop_data <= -1
     topo_data = topo_data.astype(float)
     topo_data[nan_pop] = np.nan
     pop_data[nan_pop] = np.nan
@@ -110,8 +113,8 @@ def main(country_id):
     
     terrain_map = get_topomap()
     
-    ax1.imshow(topo_data, vmin=0, vmax=2000, cmap=terrain_map, rasterized=True)
-    ax2.imshow(pop_data)
+    ax1.imshow(topo_data, vmin=0, vmax=4000, cmap=terrain_map, rasterized=True)
+    ax2.imshow(pop_data, vmin=0, vmax=100)
     
     return pop_data, topo_data
 
