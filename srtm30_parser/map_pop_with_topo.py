@@ -104,7 +104,7 @@ def main(country_id):
     lonmin, lonmax, latmin, latmax = extent
     topo_data = get_infiles(lonmin, lonmax, latmin, latmax)
     
-    nan_pop = pop_data <= -1
+    nan_pop = pop_data < 0
     topo_data = topo_data.astype(float)
     topo_data[nan_pop] = np.nan
     pop_data[nan_pop] = np.nan
