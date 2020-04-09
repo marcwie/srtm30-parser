@@ -128,7 +128,7 @@ def distribution(pop, topo):
     pop = pop[mask]
 
     valid_topo = np.arange(topo.min(), topo.max() + 1, 100)
-    valid_topo = np.arange(0, 31, 1)
+    valid_topo = np.arange(0, 41, 1)
     results = np.zeros_like(valid_topo, dtype=float)
     
     total_population = pop.sum()
@@ -143,3 +143,5 @@ def distribution(pop, topo):
     plt.plot(valid_topo, results)
     plt.xlabel("Elevation x [m above sea level]")
     plt.ylabel("Share of population living at or below x")
+
+    return valid_topo, results
