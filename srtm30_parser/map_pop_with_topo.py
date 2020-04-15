@@ -2,9 +2,11 @@ from sedac_gpw_parser import population
 import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib.colors as colors
+import os
 
 file_lons = np.arange(-180, 180, 40)
 file_lats = np.arange(90, -20, -50)
+DATA_FOLDER = os.path.expanduser("~") + "/.srtm30/"
 
 def get_population_data(country_id):
     
@@ -67,7 +69,7 @@ def get_infiles(lonmin, lonmax, latmin, latmax):
             infile = lon_pref + str(abs(valid_lon)).zfill(3) + lat_pref + str(abs(valid_lat)).zfill(2) + ".DEM"
             
            
-            with open("srtm30/"+infile) as infile:
+            with open(DATA_FOLDER+infile) as infile:
                 data = np.fromfile(infile, np.dtype('>i2')).reshape(6000, 4800)
                
             data = data[valid_file_lat_range][:, valid_file_lon_range]
