@@ -101,7 +101,7 @@ def get_topomap():
     return terrain_map
 
 
-def main(country_id):
+def main(country_id, plot=True):
     pop_data, extent = get_population_data(country_id=country_id)
     lonmin, lonmax, latmin, latmax = extent
     topo_data = get_infiles(lonmin, lonmax, latmin, latmax)
@@ -110,18 +110,19 @@ def main(country_id):
     topo_data = topo_data.astype(float)
     topo_data[nan_pop] = np.nan
     pop_data[nan_pop] = np.nan
-    
-    f, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 9))
-    
-    terrain_map = get_topomap()
-    
-    ax1.imshow(topo_data, vmin=0, vmax=4000, cmap=terrain_map, rasterized=True)
-    ax2.imshow(pop_data, vmin=0, vmax=100)
+   
+    if plot:
+        f, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 9))
+        
+        terrain_map = get_topomap()
+        
+        ax1.imshow(topo_data, vmin=0, vmax=4000, cmap=terrain_map, rasterized=True)
+        ax2.imshow(pop_data, vmin=0, vmax=100)
     
     return pop_data, topo_data
 
 
-def distribution(pop, topo):
+def distribution(pop, topo, plot=True):
     topomin = np.nanmin(topo)
     topomax = np.nanmax(topo)
 
@@ -141,9 +142,10 @@ def distribution(pop, topo):
         
     results /= total_population
 
+    if plot:
     #plt.semilogy()
-    plt.plot(valid_topo, results)
-    plt.xlabel("Elevation x [m above sea level]")
-    plt.ylabel("Share of population living at or below x")
+        plt.plot(valid_topo, results)
+        plt.xlabel("Elevation x [m above sea level]")
+        plt.ylabel("Share of population living at or below x")
 
     return valid_topo, results
