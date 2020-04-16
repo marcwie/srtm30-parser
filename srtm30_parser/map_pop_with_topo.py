@@ -11,7 +11,9 @@ DATA_FOLDER = os.path.expanduser("~") + "/.srtm30/"
 def get_population_data(country_id):
     
     pop = population.Population(country_id=country_id)
-    data = pop.population_array()
+    pop.mask_invalid_data(below=0)
+
+    #data = pop.population_array()
     lat = pop.latitude_range()
     lon = pop.longitude_range()
 
@@ -22,11 +24,11 @@ def get_population_data(country_id):
     
     extent = (lonmin, lonmax, latmin, latmax)
         
-    return data, extent
+    return pop, extent
 
 
 def get_infiles(lonmin, lonmax, latmin, latmax):
-    print(latmin, latmax, file_lats)
+    print(lonmin, lonmax, latmin, latmax)
 
     lonmask = (file_lons >= (lonmin - 40)) & (file_lons <= lonmax)
     latmask = (file_lats >= latmin) & (file_lats <= (latmax + 50))
@@ -45,14 +47,16 @@ def get_infiles(lonmin, lonmax, latmin, latmax):
 
     lat_offset = 0
     for valid_lat in valid_lats:
-            
+    
+        #print(valid_lat, end="\r")
+
         file_lat_range = np.round(np.arange(valid_lat, valid_lat-50, -1/120), 8)
         valid_file_lat_range = (file_lat_range <= latmax) & (file_lat_range >= latmin)
         n_row = valid_file_lat_range.sum()
 
         lon_offset = 0
         for valid_lon in valid_lons:
-
+            
             file_lon_range = np.round(np.arange(valid_lon, valid_lon+40, +1/120), 8)
             valid_file_lon_range = (file_lon_range <= lonmax) & (file_lon_range >= lonmin)
             n_col = valid_file_lon_range.sum()
@@ -67,15 +71,19 @@ def get_infiles(lonmin, lonmax, latmin, latmax):
                 lat_pref = "N" 
 
             infile = lon_pref + str(abs(valid_lon)).zfill(3) + lat_pref + str(abs(valid_lat)).zfill(2) + ".DEM"
-            
            
             with open(DATA_FOLDER+infile) as infile:
                 data = np.fromfile(infile, np.dtype('>i2')).reshape(6000, 4800)
-               
-            data = data[valid_file_lat_range][:, valid_file_lon_range]
+          
+            print(valid_lat, valid_lon, "cutting data")
+            data = data[valid_file_lat_range]
+            data = data[:, valid_file_lon_range]
+            print("storing data")
             full_data[lat_offset:lat_offset+n_row,lon_offset:lon_offset+n_col]=data
 
             lon_offset += n_col
+            
+            del data
 
         lat_offset += n_row
 
@@ -102,45 +110,51 @@ def get_topomap():
 
 
 def main(country_id, plot=True):
-    pop_data, extent = get_population_data(country_id=country_id)
+    pop, extent = get_population_data(country_id=country_id)
     lonmin, lonmax, latmin, latmax = extent
+
+    print("Getting topography data from disk...")
     topo_data = get_infiles(lonmin, lonmax, latmin, latmax)
-    
-    nan_pop = pop_data < 0
-    topo_data = topo_data.astype(float)
-    topo_data[nan_pop] = np.nan
-    pop_data[nan_pop] = np.nan
-   
+    #topo_data = topo_data.astype(float)
+
+    print("setting invalid values...")
+    for i, mask in enumerate(pop._invalid_values):
+        print(i, end="\r")
+        topo_data[i][mask] = np.nan
+
     if plot:
         f, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 9))
         
         terrain_map = get_topomap()
         
         ax1.imshow(topo_data, vmin=0, vmax=4000, cmap=terrain_map, rasterized=True)
-        ax2.imshow(pop_data, vmin=0, vmax=100)
+        ax2.imshow(pop.population_array(), vmin=0, vmax=100)
     
-    return pop_data, topo_data
+    return pop, topo_data
 
 
 def distribution(pop, topo, plot=True):
-    topomin = np.nanmin(topo)
-    topomax = np.nanmax(topo)
 
-    mask = np.isfinite(topo)
-    topo = topo[mask]
-    pop = pop[mask]
+    #mask = np.isfinite(topo)
+    #topo = topo[mask]
+    population = pop.population_array()#[mask]
 
-    valid_topo = np.arange(topo.min(), topo.max() + 1, 100)
+    #valid_topo = np.arange(topo.min(), topo.max() + 1, 100)
     valid_topo = np.arange(0, 41, 1)
     results = np.zeros_like(valid_topo, dtype=float)
     
-    total_population = pop.sum()
-    
+    total_population = pop.total_population()
+   
     for i, elevation in enumerate(valid_topo):
         mask = topo <= elevation
-        results[i] = pop[mask].sum() 
+        #mask = topo == elevation
+        results[i] = population[mask].sum() 
         
     results /= total_population
+
+    #results = results.cumsum() / total_population
+
+    print(results)
 
     if plot:
     #plt.semilogy()
@@ -149,3 +163,8 @@ def distribution(pop, topo, plot=True):
         plt.ylabel("Share of population living at or below x")
 
     return valid_topo, results
+
+
+if __name__ == "__main__":
+    pop, topo = main(840, plot=False)
+    distribution(pop, topo, plot=False)
