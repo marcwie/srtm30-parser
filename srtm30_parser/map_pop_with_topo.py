@@ -112,15 +112,36 @@ def get_topomap():
 def main(country_id, plot=True):
     pop, extent = get_population_data(country_id=country_id)
     lonmin, lonmax, latmin, latmax = extent
-
     print("Getting topography data from disk...")
     topo_data = get_infiles(lonmin, lonmax, latmin, latmax)
-    #topo_data = topo_data.astype(float)
+ 
+
+    print("Removing empty cols")
+    contains_values = []
+    for col_id in range(pop.shape[1]):
+        print(col_id, pop.shape[1], end="\r")
+        if np.isfinite(pop[:, col_id]).any():
+            contains_values.append(col_id)
+
+    print(len(contains_values), pop.shape)
+    pop = pop[:, contains_values]
+    topo_data = topo_data[:, contains_values]
+
+    print("Removing empty rows")
+    contains_values = []
+    for row_id in range(pop.shape[0]):
+        print(row_id, pop.shape[1], end="\r")
+        if np.isfinite(pop[row_id]).any():
+            contains_values.append(row_id)
+
+    print(len(contains_values), pop.shape)
+    pop = pop[contains_values]
+    topo_data = topo_data[contains_values]
 
     print("setting invalid values...")
-    for i, _pop in enumerate(pop):
-        print(i, end="\r")
-        topo_data[i][np.isnan(_pop)] = np.nan
+    #for i, _pop in enumerate(pop):
+    #    print(i, len(pop), end="\r")
+    topo_data[np.isnan(pop)] = np.nan
 
     if plot:
         f, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 9))
