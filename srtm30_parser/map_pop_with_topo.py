@@ -13,7 +13,7 @@ def get_population_data(country_id):
     pop = population.Population(country_id=country_id)
     pop.mask_invalid_data(below=0)
 
-    #data = pop.population_array()
+    data = pop.population_array()
     lat = pop.latitude_range()
     lon = pop.longitude_range()
 
@@ -24,7 +24,7 @@ def get_population_data(country_id):
     
     extent = (lonmin, lonmax, latmin, latmax)
         
-    return pop, extent
+    return data, extent
 
 
 def get_infiles(lonmin, lonmax, latmin, latmax):
@@ -118,9 +118,9 @@ def main(country_id, plot=True):
     #topo_data = topo_data.astype(float)
 
     print("setting invalid values...")
-    for i, mask in enumerate(pop._invalid_values):
+    for i, _pop in enumerate(pop):
         print(i, end="\r")
-        topo_data[i][mask] = np.nan
+        topo_data[i][np.isnan(_pop)] = np.nan
 
     if plot:
         f, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 9))
@@ -128,28 +128,29 @@ def main(country_id, plot=True):
         terrain_map = get_topomap()
         
         ax1.imshow(topo_data, vmin=0, vmax=4000, cmap=terrain_map, rasterized=True)
-        ax2.imshow(pop.population_array(), vmin=0, vmax=100)
+        ax2.imshow(pop, vmin=0, vmax=100)
     
     return pop, topo_data
 
 
 def distribution(pop, topo, plot=True):
 
-    #mask = np.isfinite(topo)
-    #topo = topo[mask]
-    population = pop.population_array()#[mask]
+    mask = np.isfinite(topo)
+    topo = topo[mask]
+    pop = pop[mask]
 
     #valid_topo = np.arange(topo.min(), topo.max() + 1, 100)
     valid_topo = np.arange(0, 41, 1)
     results = np.zeros_like(valid_topo, dtype=float)
     
-    total_population = pop.total_population()
+    #total_population = pop.total_population()
    
     for i, elevation in enumerate(valid_topo):
         mask = topo <= elevation
         #mask = topo == elevation
-        results[i] = population[mask].sum() 
-        
+        results[i] = pop[mask].sum() 
+       
+    total_population = np.sum(pop)
     results /= total_population
 
     #results = results.cumsum() / total_population
