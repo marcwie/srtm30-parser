@@ -1,3 +1,4 @@
 build/
 dist/
 srtm30_parser.egg-info/
+srtm30_parser/__pycache__/
