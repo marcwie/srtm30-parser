@@ -154,7 +154,7 @@ def main(country_id, plot=True):
     return pop, topo_data
 
 
-def distribution(pop, topo, plot=True):
+def distribution(pop, topo, return_total=False, plot=True):
 
     mask = np.isfinite(topo)
     topo = topo[mask]
@@ -184,7 +184,10 @@ def distribution(pop, topo, plot=True):
         plt.xlabel("Elevation x [m above sea level]")
         plt.ylabel("Share of population living at or below x")
 
-    return valid_topo, results
+    if return_total:
+        return valid_topo, results, total_population
+    else:
+        return valid_topo, results
 
 
 if __name__ == "__main__":
