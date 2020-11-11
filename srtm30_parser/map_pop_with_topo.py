@@ -150,18 +150,28 @@ def main(country_id, plot=True):
         
         ax1.imshow(topo_data, vmin=0, vmax=4000, cmap=terrain_map, rasterized=True)
         ax2.imshow(pop, vmin=0, vmax=100)
-    
+        plt.savefig("pop_topo.png")
+
     return pop, topo_data
 
 
-def distribution(pop, topo, return_total=False, plot=True):
+def distribution(pop, topo, return_total=False, plot=True, resolution=500,
+                 max_elevation=20, add_noise=True):
 
     mask = np.isfinite(topo)
     topo = topo[mask]
     pop = pop[mask]
 
-    #valid_topo = np.arange(topo.min(), topo.max() + 1, 100)
-    valid_topo = np.arange(0, 41, 1)
+    # Make sure that some artifacts where elevation is negative are set to zero
+    topo[topo <= 0] = 0
+
+    #topo[topo == 0] += 0.5 * np.random.random((topo == 0).sum())
+    #topo[topo >= 0.5] += np.random.random((topo >= 0.5).sum()) - 0.5
+
+    if add_noise:
+        topo+= np.random.random(len(topo))
+
+    valid_topo = np.linspace(0, max_elevation, resolution)
     results = np.zeros_like(valid_topo, dtype=float)
     
     #total_population = pop.total_population()
@@ -176,13 +186,13 @@ def distribution(pop, topo, return_total=False, plot=True):
 
     #results = results.cumsum() / total_population
 
-    print(results)
-
     if plot:
+        f = plt.figure()
     #plt.semilogy()
         plt.plot(valid_topo, results)
         plt.xlabel("Elevation x [m above sea level]")
         plt.ylabel("Share of population living at or below x")
+        plt.savefig("population_elevation.png")
 
     if return_total:
         return valid_topo, results, total_population
@@ -191,5 +201,5 @@ def distribution(pop, topo, return_total=False, plot=True):
 
 
 if __name__ == "__main__":
-    pop, topo = main(840, plot=False)
-    distribution(pop, topo, plot=False)
+    pop, topo = main(840, plot=True)
+    distribution(pop, topo, plot=True)
