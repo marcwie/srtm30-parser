@@ -37,12 +37,12 @@ python setup.py install
    data_table = data.as_list()                                                     
    print(data_table)                                                                                       
    ```
-Note that allowed values for longitudes range from -180 to 180 and allowed values for latitudes range from -90 to 90. `data.as_list()` return a table with three colunms (longitude, latitude, elevation). Note that (longitude, latitude) refer to the position of the lower left corner of each grid cell.
-A quick-and-dirty sanity check can be done by saving the data as an image:
+   Note that allowed values for longitudes range from -180 to 180 and allowed values for latitudes range from -90 to 90. `data.as_list()` return a table with three colunms (longitude, latitude, elevation). Note that (longitude, latitude) refer to the position of the lower left corner of each grid cell.
+   A quick-and-dirty sanity check can be done by saving the data as an image:
    ```python
    from srtm30_parser import elevation                                             
 
    data = elevation.Elevation(lonmin=5, lonmax=6, latmin=5, latmax=6)              
    data.plot(filename="out.png")                                                                                      
    ```
-The plot does not look pretty but it serves its purpose.
+   The plot does not look pretty but it serves its purpose.
