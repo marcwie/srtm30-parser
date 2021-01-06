@@ -11,14 +11,10 @@ class Elevation():
 
     def __init__(self, lonmin, lonmax, latmin, latmax):
 
-        assert lonmin % 1 / 120 == 0
-        assert lonmax % 1 / 120 == 0
-        assert latmin % 1 / 120 == 0
-        assert latmax % 1 / 120 == 0
-
         self._extent = [lonmin, lonmax, latmin, latmax]
 
         self._load()
+
 
     def _load(self):
 
@@ -87,6 +83,18 @@ class Elevation():
         lon_list = np.tile(lon_range, len(lat_range))
 
         return np.stack((lon_list, lat_list, data.flatten())).T
+
+    def elevation_array(self):
+
+        return self._data
+
+    def latitude_range(self):
+
+        return self._latitude_range
+
+    def longitude_range(self):
+
+        return self._longitude_range
 
 
 if __name__ == "__main__":
