@@ -143,13 +143,15 @@ def main(country_id, plot=True):
     #    print(i, len(pop), end="\r")
     topo_data[np.isnan(pop)] = np.nan
 
+    print("Total population:", np.nansum(pop))
+    
     if plot:
         f, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 9))
         
         terrain_map = get_topomap()
         
         ax1.imshow(topo_data, vmin=0, vmax=4000, cmap=terrain_map, rasterized=True)
-        ax2.imshow(pop, vmin=0, vmax=100)
+        ax2.imshow(pop, vmin=0, vmax=50)
         plt.savefig("pop_topo.png")
 
     return pop, topo_data
