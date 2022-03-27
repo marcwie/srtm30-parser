@@ -1,3 +1,5 @@
+**NOTE: USGS does no longer allows to directly download files via filepath meaning that this package no longer works as intended.**
+
 # srtm30-parser
 A framework to work with SRTM30 near-global digital elevation data, i.e., a combination of data from the Shuttle Radar Topography Mission and the U.S. Geological Survey's GTOPO30 data set. 
 
